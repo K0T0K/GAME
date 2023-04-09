@@ -35,7 +35,6 @@ public class Game1 : Game
 
     protected override void LoadContent()
     {
-        Directory.SetCurrentDirectory(@"D:\RD\Game1\Game1");
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _characters.Add(new Knight(_graphics.GraphicsDevice));
         
@@ -113,7 +112,11 @@ public class Game1 : Game
 
         foreach (var character in _characters)
         {
-            _spriteBatch.Draw(character.GetCurrentImage(), character.Location, Color.White);
+            _spriteBatch.Draw(character.GetCurrentImage(), 
+                character.Location, 
+                null, 
+                Color.White, 0, Vector2.Zero, 
+                0.3f, SpriteEffects.None, 0);
         }
         
         // Y lines

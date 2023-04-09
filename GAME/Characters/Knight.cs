@@ -18,8 +18,8 @@ public class Knight : ICharacter
     {
         for (var i = 0; i < 10; i++)
         {
-            _idleImages.Add(Texture2D.FromFile(graphicsDevice, @$"{Directory.GetCurrentDirectory()}\Images\Idle\Knight_01__IDLE_00{i}.png"));
-            _walkImages.Add(Texture2D.FromFile(graphicsDevice, @$"{Directory.GetCurrentDirectory()}\Images\Walk\Knight_01__WALK_00{i}.png"));
+            _idleImages.Add(Texture2D.FromFile(graphicsDevice, @$"Images\Idle\Knight_01__IDLE_00{i}.png"));
+            _walkImages.Add(Texture2D.FromFile(graphicsDevice, @$"Images\Walk\Knight_01__WALK_00{i}.png"));
         }
     }
 
