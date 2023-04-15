@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+
 using Game1.Characters;
 using Game1.Characters.Enums;
 using Game1.Characters.Interfaces;
@@ -16,6 +16,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private List<ICharacter> _characters = new();
+    private ICharacter selectedCharacter;
 
     public Game1()
     {
@@ -44,32 +45,31 @@ public class Game1 : Game
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
-
-        _characters[0].State = CharacterState.Idle;
-
-        if (Keyboard.GetState().IsKeyDown(Keys.A))
+        foreach (var character in _characters)
         {
-            _characters[0].Move(new System.Numerics.Vector2(-1, 0));
-        }
-        
-        if (Keyboard.GetState().IsKeyDown(Keys.W))
-        {
-            _characters[0].Move(new System.Numerics.Vector2(0, -1));
-        }
-        
-        if (Keyboard.GetState().IsKeyDown(Keys.D))
-        {
-            _characters[0].Move(new System.Numerics.Vector2(1, 0));
-        }
-        
-        if (Keyboard.GetState().IsKeyDown(Keys.S))
-        {
-            _characters[0].Move(new System.Numerics.Vector2(0, 1));
+            character.State = CharacterState.Idle;
         }
 
+        foreach (var character in _characters)
+        {
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed && character.IsClicked(Mouse.GetState()))
+            {
+                selectedCharacter = character;
+                _characters.Remove(character);
+                break;
+            }
+        }
+
+        if (Mouse.GetState().LeftButton == ButtonState.Released && selectedCharacter != null)
+        {
+            _characters.Add(selectedCharacter);
+            selectedCharacter.Location = Mouse.GetState().Position.ToVector2();
+            selectedCharacter = null;
+        }
         base.Update(gameTime);
+            
     }
-    
+
     public void DrawLineBetween(
         Vector2 startPos,
         Vector2 endPos,
@@ -109,6 +109,14 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.Gray);
         _spriteBatch.Begin();
+        
+        if (selectedCharacter != null)
+        {
+            _spriteBatch. Draw(texture: selectedCharacter.GetCurrentImage(), Mouse.GetState().Position. ToVector2(),
+                sourceRectangle: null,
+                Color. White, rotation: 0, origin: Vector2.Zero,
+                scale: 0.3f, SpriteEffects.None, layerDepth: 0);
+        }
 
         foreach (var character in _characters)
         {
@@ -124,6 +132,7 @@ public class Game1 : Game
         DrawLineBetween(new Vector2(1077, 0), new Vector2(1077, 720), 7, Color.Black);
         // X lines
         DrawLineBetween(new Vector2(0, 3), new Vector2(1078, 3), 7, Color.Black);
+        DrawLineBetween(new Vector2(0, 716), new Vector2(1078, 716), 7, Color.Black);
         DrawLineBetween(new Vector2(0, 716), new Vector2(1078, 716), 7, Color.Black);
         //_spriteBatch.Draw(mySpriteTexture, new Vector2(X,Y), Color.White);
         _spriteBatch.End();
