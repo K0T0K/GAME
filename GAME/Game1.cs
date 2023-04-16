@@ -130,10 +130,33 @@ public class Game1 : Game
         // Y lines
         DrawLineBetween(new Vector2(4, 0), new Vector2(4, 720), 7, Color.Black);
         DrawLineBetween(new Vector2(1077, 0), new Vector2(1077, 720), 7, Color.Black);
+        DrawLineBetween(new Vector2(950, 0), new Vector2(950, 720), 7, Color.Black);
+        //      game place
+        DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100), 2, Color.Black);
+        DrawLineBetween(new Vector2(900, 100), new Vector2(928, 576), 2, Color.Black);
+
+        for (var a = 0; a <= 900; a++)
+        {
+            DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100), 2, Color.Black);
+        }
+       
+        
+        
         // X lines
         DrawLineBetween(new Vector2(0, 3), new Vector2(1078, 3), 7, Color.Black);
         DrawLineBetween(new Vector2(0, 716), new Vector2(1078, 716), 7, Color.Black);
-        DrawLineBetween(new Vector2(0, 716), new Vector2(1078, 716), 7, Color.Black);
+        DrawLineBetween(new Vector2(0, 586), new Vector2(950, 586), 7, Color.Black);
+        //      game place
+        
+        var gamePlaceHeight = 476;
+        var cellHeight = 68;
+        var j = 0;
+        for (var i = 0; i <= gamePlaceHeight; i += cellHeight)
+        {
+            DrawLineBetween(new Vector2(50 - j, 100 + i), new Vector2(900 + j, 100 + i), 2, Color.Black);
+            j += 4;
+        }
+        
         //_spriteBatch.Draw(mySpriteTexture, new Vector2(X,Y), Color.White);
         _spriteBatch.End();
 
