@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using Game1.Characters;
 using Game1.Characters.Enums;
 using Game1.Characters.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 
 
 namespace GAME;
@@ -37,7 +37,7 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _characters.Add(new Knight(_graphics.GraphicsDevice));
+        _characters.Add(new Knight(_graphics.GraphicsDevice, scale: 0.3f));
         
     }
 
@@ -47,7 +47,7 @@ public class Game1 : Game
             Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
         foreach (var character in _characters)
         {
-            character.State = CharacterState.Idle;
+            character.State = CharacterState.Walk;
         }
 
         foreach (var character in _characters)
@@ -58,14 +58,26 @@ public class Game1 : Game
                 _characters.Remove(character);
                 break;
             }
+            // Изменение картинки во время игры
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Up))
+            {
+                character.ImageScale += 0.1f;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Down))
+            {
+                character.ImageScale -= 0.1f;
+            }
         }
 
         if (Mouse.GetState().LeftButton == ButtonState.Released && selectedCharacter != null)
         {
             _characters.Add(selectedCharacter);
-            selectedCharacter.Location = Mouse.GetState().Position.ToVector2();
+            selectedCharacter.ImageLocation = selectedCharacter.GetPositionForCenterDrawing(Mouse.GetState().Position.ToVector2());
             selectedCharacter = null;
         }
+        
         base.Update(gameTime);
             
     }
@@ -112,19 +124,20 @@ public class Game1 : Game
         
         if (selectedCharacter != null)
         {
-            _spriteBatch. Draw(texture: selectedCharacter.GetCurrentImage(), Mouse.GetState().Position. ToVector2(),
+            _spriteBatch. Draw(texture: selectedCharacter.GetCurrentImage(),
+                selectedCharacter.GetPositionForCenterDrawing(Mouse.GetState().Position.ToVector2()),
                 sourceRectangle: null,
                 Color. White, rotation: 0, origin: Vector2.Zero,
-                scale: 0.3f, SpriteEffects.None, layerDepth: 0);
+                scale: selectedCharacter.ImageScale, SpriteEffects.None, layerDepth: 0);
         }
 
         foreach (var character in _characters)
         {
             _spriteBatch.Draw(character.GetCurrentImage(), 
-                character.Location, 
+                character.ImageLocation, 
                 null, 
                 Color.White, 0, Vector2.Zero, 
-                0.3f, SpriteEffects.None, 0);
+                character.ImageScale, SpriteEffects.None, 0);
         }
         
         // Y lines

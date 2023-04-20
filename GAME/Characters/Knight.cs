@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using Game1.Characters.Enums;
 using Game1.Characters.Interfaces;
 using Microsoft.Xna.Framework;
@@ -14,8 +15,10 @@ public class Knight : ICharacter
     private static List<Texture2D> _walkImages = new();
     private int _currentFrame = 0;
     private int _animationSpeed = 6;
+    private Size _imageSize;
+    private ICharacter _characterImplementation;
 
-    public Knight(GraphicsDevice graphicsDevice, Vector2 initialPosition = new Vector2())
+    public Knight(GraphicsDevice graphicsDevice, Vector2 initialPosition = new Vector2(), float scale = 1)
     {
         for (var i = 0; i < 10; i++)
         {
@@ -23,17 +26,28 @@ public class Knight : ICharacter
             _walkImages.Add(Texture2D.FromFile(graphicsDevice, @$"Images\Walk\Knight_01__WALK_00{i}.png"));
         }
 
-        Location = initialPosition;
+        _imageSize = new Size(_walkImages[0].Width, _walkImages[0].Height);
+        ImageScale = scale;
+        ImageLocation = initialPosition;
     }
 
-    public Vector2 Location { get; set; }
+    public Vector2 ImageLocation { get; set; }
     
     public CharacterState State { get; set; }
     
+    public float ImageScale { get; set; }
+
+    public Vector2 GetPositionForCenterDrawing(Vector2 mousePositon)
+    {
+        return new Vector2(mousePositon.X - _imageSize.Width * ImageScale / 2,
+            mousePositon.Y - _imageSize.Height * ImageScale / 2);
+    }
     public bool IsClicked(MouseState mousePoint)
     {
-        return Math.Abs (Location.X - mousePoint.X) 
-            <= 50 && Math.Abs (Location.Y - mousePoint.Y) <= 50;
+        return mousePoint.X - ImageLocation.X <= _imageSize.Width * ImageScale
+               && mousePoint.X - ImageLocation.X >= 0
+               && mousePoint.Y - ImageLocation.Y <= _imageSize.Height * ImageScale
+               && mousePoint.Y - ImageLocation.Y >= 0;
     }
     
 
@@ -54,7 +68,7 @@ public class Knight : ICharacter
 
     public void Move(Vector2 delta)
     {
-        Location = new Vector2(Location.X + delta.X, Location.Y + delta.Y);
+        ImageLocation = new Vector2(ImageLocation.X + delta.X, ImageLocation.Y + delta.Y);
         State = CharacterState.Walk;
     }
 }
