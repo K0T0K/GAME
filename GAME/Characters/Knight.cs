@@ -18,7 +18,7 @@ public class Knight : ICharacter
     private Size _imageSize;
     private ICharacter _characterImplementation;
 
-    public Knight(GraphicsDevice graphicsDevice, Vector2 initialPosition = new Vector2(), float scale = 1)
+    public Knight(GraphicsDevice graphicsDevice,int price, Vector2 initialPosition = new Vector2(), float scale = 1)
     {
         for (var i = 0; i < 10; i++)
         {
@@ -26,6 +26,7 @@ public class Knight : ICharacter
             _walkImages.Add(Texture2D.FromFile(graphicsDevice, @$"Images\Walk\Knight_01__WALK_00{i}.png"));
         }
 
+        Price = price;
         _imageSize = new Size(_walkImages[0].Width, _walkImages[0].Height);
         ImageScale = scale;
         ImageLocation = initialPosition;
@@ -37,6 +38,7 @@ public class Knight : ICharacter
     
     public float ImageScale { get; set; }
 
+    public int Price { get; set; }
     public Vector2 GetPositionForCenterDrawing(Vector2 mousePositon)
     {
         return new Vector2(mousePositon.X - _imageSize.Width * ImageScale / 2,

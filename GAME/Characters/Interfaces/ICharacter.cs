@@ -14,4 +14,5 @@ public interface ICharacter
     public bool IsClicked(MouseState mousePoint);
     public float ImageScale { get; set; }
     public Vector2 GetPositionForCenterDrawing(Vector2 mousePosition);
+    public int Price { get; set; }
 }
