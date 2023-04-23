@@ -23,6 +23,7 @@ public class Game1 : Game
     private Size _cellSize = new(40, 68);
     private Vector2 _storeLocation = new(0, 586);
     private SpriteFont _font;
+    private Texture2D _line;
 
     public Game1()
     {
@@ -36,7 +37,8 @@ public class Game1 : Game
         _graphics.PreferredBackBufferWidth = 1080;
         _graphics.PreferredBackBufferHeight = 720;
         _graphics.ApplyChanges();
-        _font = Content.Load<SpriteFont>(@"Fonts\arial");
+
+        _line = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\line.png");
 
         _charactersOnStore.Add(new Knight(GraphicsDevice, 100, _storeLocation, 0.2f));
 
@@ -91,40 +93,20 @@ public class Game1 : Game
 
     }
 
-    public void DrawLineBetween(
+    private void DrawLineBetween(
         Vector2 startPos,
-        Vector2 endPos,
-        int thickness,
-        Color color)
+        Vector2 endPos)
     {
-        // Create a texture as wide as the distance between two points and as high as
-        // the desired thickness of the line.
-        var distance = (int)Vector2.Distance(startPos, endPos);
-        var texture = new Texture2D(_spriteBatch.GraphicsDevice, distance, thickness);
+        var dx = startPos.X - endPos.X;
+        var dy = startPos.Y - endPos.Y;
+        var tg = dx / dy;                          
+        var angle = (float) - Math.Atan(tg) - 190;    /////////
+        var distance = Vector2.Distance(startPos, endPos);
+        var scale = distance / _line.Width;
 
-        // Fill texture with given color.
-        var data = new Color[distance * thickness];
-        for (int i = 0; i < data.Length; i++)
-        {
-            data[i] = color;
-        }
 
-        texture.SetData(data);
-
-        // Rotate about the beginning middle of the line.
-        var rotation = (float)Math.Atan2(endPos.Y - startPos.Y, endPos.X - startPos.X);
-        var origin = new Vector2(0, thickness / 2);
-
-        _spriteBatch.Draw(
-            texture,
-            startPos,
-            null,
-            Color.White,
-            rotation,
-            origin,
-            1.0f,
-            SpriteEffects.None,
-            1.0f);
+        _spriteBatch.Draw(_line, startPos, null, 
+            Color.Black, angle,Vector2.Zero, scale, SpriteEffects.None, 1);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -134,14 +116,15 @@ public class Game1 : Game
 
 
         // Y lines
-        DrawLineBetween(new Vector2(4, 0), new Vector2(4, 720), 7, Color.Black);
-        DrawLineBetween(new Vector2(1077, 0), new Vector2(1077, 720), 7, Color.Black);
-        DrawLineBetween(new Vector2(950, 0), new Vector2(950, 720), 7, Color.Black);
+        DrawLineBetween(new Vector2(4, 0), new Vector2(4, 720));
+        DrawLineBetween(new Vector2(1077, 0), new Vector2(1077, 720));
+        DrawLineBetween(new Vector2(950, 0), new Vector2(950, 720));
         //      game place
-        DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100), 2, Color.Black);
-        DrawLineBetween(new Vector2(900, 100), new Vector2(928, 576), 2, Color.Black);
+        DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100));
+        DrawLineBetween(new Vector2(900, 100), new Vector2(Mouse.GetState().X, Mouse.GetState().Y));
 
-        for (var a = 0; a <= 900; a++)
+        /*
+         for (var a = 0; a <= 900; a++)
         {
             DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100), 2, Color.Black);
         }
@@ -161,6 +144,7 @@ public class Game1 : Game
             DrawLineBetween(new Vector2(50 - j, 100 + i), new Vector2(900 + j, 100 + i), 2, Color.Black);
             j += 4;
         }
+        */
 
         if (selectedCharacter != null)
 
@@ -179,8 +163,8 @@ public class Game1 : Game
                 null,
                 Color.White, 0, origin: Vector2.Zero,
                 character.ImageScale, SpriteEffects.None, 0);
-            _spriteBatch.DrawString(_font, character.Price.ToString(), character.ImageLocation + new Vector2(0, 50),
-                Color.Black);
+            //_spriteBatch.DrawString(_font, character.Price.ToString(), character.ImageLocation + new Vector2(0, 50),
+            //    Color.Black);
         }
 
         foreach (var character in _charactersOnField)
@@ -192,10 +176,10 @@ public class Game1 : Game
                 Color.White, 0, Vector2.Zero,
                 character.ImageScale, SpriteEffects.None, 0);
 
-            //_spriteBatch.Draw(mySpriteTexture, new Vector2(X,Y), Color.White);
-            _spriteBatch.End();
-
-            base.Draw(gameTime);
         }
+        //_spriteBatch.Draw(mySpriteTexture, new Vector2(X,Y), Color.White);
+        _spriteBatch.End();
+        
+        base.Draw(gameTime);
     }
 }
