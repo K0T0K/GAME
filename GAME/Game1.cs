@@ -68,17 +68,7 @@ public class Game1 : Game
                 _charactersOnField.Remove(character);
                 break;
             }
-            // Изменение картинки во время игры
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Up))
-            {
-                character.ImageScale += 0.1f;
-            }
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Down))
-            {
-                character.ImageScale -= 0.1f;
-            }
+            
         }
 
         if (Mouse.GetState().LeftButton == ButtonState.Released && selectedCharacter != null)
