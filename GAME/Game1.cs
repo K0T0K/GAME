@@ -21,7 +21,7 @@ public class Game1 : Game
     private List<ICharacter> _charactersOnStore = new();
     private ICharacter selectedCharacter;
     private Size _cellSize = new(40, 68);
-    private Vector2 _storeLocation = new(0, 586);
+    private Vector2 _storeLocation = new(-50, 555);
     private SpriteFont _font;
     private Texture2D _line;
 
@@ -99,14 +99,14 @@ public class Game1 : Game
     {
         var dx = startPos.X - endPos.X;
         var dy = startPos.Y - endPos.Y;
-        var tg = dx / dy;                          
-        var angle = (float) - Math.Atan(tg) - 190;    /////////
+        var tg = dx / dy;
+        var angle = (float)-Math.Atan(tg) - (dy < 0 ? Math.PI : 0);    /////////
         var distance = Vector2.Distance(startPos, endPos);
-        var scale = distance / _line.Width;
+        var scale = distance / _line.Height;
 
 
         _spriteBatch.Draw(_line, startPos, null, 
-            Color.Black, angle,Vector2.Zero, scale, SpriteEffects.None, 1);
+            Color.Black, (float)(angle + Math.PI),Vector2.Zero, scale, SpriteEffects.None, 1);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -121,30 +121,30 @@ public class Game1 : Game
         DrawLineBetween(new Vector2(950, 0), new Vector2(950, 720));
         //      game place
         DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100));
-        DrawLineBetween(new Vector2(900, 100), new Vector2(Mouse.GetState().X, Mouse.GetState().Y));
+        DrawLineBetween(new Vector2(900, 100), new Vector2(928, 576));
 
-        /*
+        
          for (var a = 0; a <= 900; a++)
         {
-            DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100), 2, Color.Black);
+            DrawLineBetween(new Vector2(22, 576), new Vector2(50, 100));
         }
 
 
 
         // X lines
-        DrawLineBetween(new Vector2(0, 3), new Vector2(1078, 3), 7, Color.Black);
-        DrawLineBetween(new Vector2(0, 716), new Vector2(1078, 716), 7, Color.Black);
-        DrawLineBetween(new Vector2(0, 586), new Vector2(950, 586), 7, Color.Black);
+        DrawLineBetween(new Vector2(0, 3), new Vector2(1078, 3));
+        DrawLineBetween(new Vector2(0, 716), new Vector2(1078, 716));
+        DrawLineBetween(new Vector2(0, 586), new Vector2(950, 586));
         //      game place
 
         var gamePlaceHeight = 476;
         var j = 0;
         for (var i = 0; i <= gamePlaceHeight; i += _cellSize.Height)
         {
-            DrawLineBetween(new Vector2(50 - j, 100 + i), new Vector2(900 + j, 100 + i), 2, Color.Black);
+            DrawLineBetween(new Vector2(50 - j, 100 + i), new Vector2(900 + j, 100 + i));
             j += 4;
         }
-        */
+        
 
         if (selectedCharacter != null)
 
@@ -175,6 +175,8 @@ public class Game1 : Game
                 null,
                 Color.White, 0, Vector2.Zero,
                 character.ImageScale, SpriteEffects.None, 0);
+            _spriteBatch.DrawString(_font, character.Price.ToString(), character.ImageLocation + new Vector2(100, 120),
+                Color.Black);
 
         }
         //_spriteBatch.Draw(mySpriteTexture, new Vector2(X,Y), Color.White);
