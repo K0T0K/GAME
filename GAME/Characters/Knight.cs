@@ -11,14 +11,14 @@ namespace Game1.Characters;
 
 public class Knight : ICharacter
 {
+    public static int CurrentFrame;
     private static List<Texture2D> _idleImages = new();
     private static List<Texture2D> _walkImages = new();
-    private int _currentFrame = 0;
     private int _animationSpeed = 6;
     private Size _imageSize;
     private ICharacter _characterImplementation;
 
-    public Knight(GraphicsDevice graphicsDevice,int price, Vector2 initialPosition = new Vector2(), float scale = 1)
+    public Knight(GraphicsDevice graphicsDevice, int price, Player player, Vector2 initialPosition = new(), float scaleOnField = 1, float scaleOnStore = 1)
     {
         for (var i = 0; i < 10; i++)
         {
@@ -26,9 +26,11 @@ public class Knight : ICharacter
             _walkImages.Add(Texture2D.FromFile(graphicsDevice, @$"Images\Walk\Knight_01__WALK_00{i}.png"));
         }
 
+        Player = player;
         Price = price;
         _imageSize = new Size(_walkImages[0].Width, _walkImages[0].Height);
-        ImageScale = scale;
+        ImageScaleOnStore = scaleOnStore;
+        ImageScaleOnField = scaleOnField;
         ImageLocation = initialPosition;
     }
 
@@ -36,41 +38,56 @@ public class Knight : ICharacter
     
     public CharacterState State { get; set; }
     
-    public float ImageScale { get; set; }
-
+    public float ImageScaleOnStore { get; set; }
+    public float ImageScaleOnField { get; set; }
     public int Price { get; set; }
-    public Vector2 GetPositionForCenterDrawing(Vector2 mousePositon)
+    public Player Player { get; set; }
+    public Vector2 GetPositionForCenterDrawingOnStore(Vector2 mousePositon)
     {
-        return new Vector2(mousePositon.X - _imageSize.Width * ImageScale / 2,
-            mousePositon.Y - _imageSize.Height * ImageScale / 2);
+        return new Vector2(mousePositon.X - _imageSize.Width * ImageScaleOnStore / 2,
+            mousePositon.Y - _imageSize.Height * ImageScaleOnStore/ 2);
     }
+    public Vector2 GetPositionForCenterDrawingOnField(Vector2 mousePosition)
+    {
+        return new Vector2(x: mousePosition.X - _imageSize.Width * ImageScaleOnField / 2,
+            y: mousePosition.Y - _imageSize.Height * ImageScaleOnField / 2);
+    }
+    
     public bool IsClicked(MouseState mousePoint)
     {
-        return mousePoint.X - ImageLocation.X <= _imageSize.Width * ImageScale
+        return mousePoint.X - ImageLocation.X <= _imageSize.Width * ImageScaleOnStore
                && mousePoint.X - ImageLocation.X >= 0
-               && mousePoint.Y - ImageLocation.Y <= _imageSize.Height * ImageScale
+               && mousePoint.Y - ImageLocation.Y <= _imageSize.Height * ImageScaleOnStore
                && mousePoint.Y - ImageLocation.Y >= 0;
     }
     
 
     public Texture2D GetCurrentImage()
     {
-        _currentFrame++;
-
-        if (_currentFrame / _animationSpeed >= _idleImages.Count)
+        if (CurrentFrame / _animationSpeed >= _idleImages.Count)
         {
-            _currentFrame = 0;
+            CurrentFrame = 0;
         }
 
         if (State == CharacterState.Walk)
-            return _walkImages[_currentFrame / _animationSpeed];
+            return _walkImages[CurrentFrame / _animationSpeed];
 
-        return _idleImages[_currentFrame / _animationSpeed];
+        return _idleImages[CurrentFrame / _animationSpeed];
     }
 
     public void Move(Vector2 delta)
     {
         ImageLocation = new Vector2(ImageLocation.X + delta.X, ImageLocation.Y + delta.Y);
         State = CharacterState.Walk;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is not ICharacter character)
+        {
+            return false;
+        }
+
+        return character.ImageLocation == ImageLocation;
     }
 }

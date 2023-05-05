@@ -35,3 +35,4 @@ D:\RD\GAME\GAME\obj\Debug\net6.0-windows\refint\GAME.dll
 D:\RD\GAME\GAME\obj\Debug\net6.0-windows\GAME.pdb
 D:\RD\GAME\GAME\obj\Debug\net6.0-windows\GAME.genruntimeconfig.cache
 D:\RD\GAME\GAME\obj\Debug\net6.0-windows\ref\GAME.dll
+D:\RD\GAME\GAME\bin\Debug\net6.0-windows\Content\Fonts\File.xnb
