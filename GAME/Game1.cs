@@ -57,7 +57,7 @@ public class Game1 : Game
         }
             
         _line = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\line.png");
-        //_ball = Texture2D.FromFile(GraphicsDevice, @"Image\Pictures\ball.png");
+        _ball = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\ball.png");
         _font = Content.Load<SpriteFont>(@"Fonts\File");
         
         _charactersOnStore.Add(new Knight(GraphicsDevice, 100, Player.Human, _storeLocation, 0.1f, 0.2f));
