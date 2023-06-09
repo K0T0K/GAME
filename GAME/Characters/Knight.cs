@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using GAME.Field;
 using Game1.Characters.Enums;
 using Game1.Characters.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Point = Microsoft.Xna.Framework.Point;
 
 namespace Game1.Characters;
 
@@ -32,6 +34,8 @@ public class Knight : ICharacter
         ImageScaleOnStore = scaleOnStore;
         ImageScaleOnField = scaleOnField;
         ImageLocation = initialPosition;
+        Health = 3;
+        FuturePosition = ImageLocation;
     }
 
     public Vector2 ImageLocation { get; set; }
@@ -42,10 +46,71 @@ public class Knight : ICharacter
     public float ImageScaleOnField { get; set; }
     public int Price { get; set; }
     public Player Player { get; set; }
-    public Vector2 GetPositionForCenterDrawingOnStore(Vector2 mousePositon)
+    public int Health { get; set; }
+    public Point FieldCoordinates { get; set; }
+    
+    public ICharacter GetCopy(GraphicsDevice graphicsDevice)
     {
-        return new Vector2(mousePositon.X - _imageSize.Width * ImageScaleOnStore / 2,
-            mousePositon.Y - _imageSize.Height * ImageScaleOnStore/ 2);
+        return new Knight(graphicsDevice, Price, Player, ImageLocation, ImageScaleOnField, ImageScaleOnStore);
+    }
+
+    public Vector2 FuturePosition { get; set; }
+    public void UpdatePosition()
+    {
+        if (ImageLocation != FuturePosition)
+        {
+            var dx = (FuturePosition.X - ImageLocation.X) / 3;
+            var dy = (FuturePosition.Y - ImageLocation.Y) / 3;
+            ImageLocation += new Vector2(dx, dy);
+        }
+    }
+
+    public void SetNewPosition(Vector2 newPosition)
+    {
+        ImageLocation = FuturePosition = newPosition;
+    }
+
+    public void Move(FieldCell[,] field)
+    {
+        var enemy = FieldHelper.GetMostAttractiveEnemy(FieldCoordinates, field);
+        if (enemy == null)
+        {
+            return;
+        }
+
+        var freeWays = FieldHelper.GetFreeWays(FieldCoordinates, field);
+
+        if (freeWays.Length == 0)
+        {
+            return;
+        }
+
+        if (Math.Abs(FieldCoordinates.X - enemy.FieldCoordinates.X) == 1 && Math.Abs(FieldCoordinates.Y - enemy.FieldCoordinates.Y) == 0
+            || Math.Abs(FieldCoordinates.X - enemy.FieldCoordinates.X) == 0 && Math.Abs(FieldCoordinates.Y - enemy.FieldCoordinates.Y) == 1)
+        {
+            enemy.Health--;
+            return;
+        }
+
+        foreach (var freeWay in freeWays)
+        {
+            if ((freeWay.X - FieldCoordinates.X) * (enemy.FieldCoordinates.X - FieldCoordinates.X) > 0 
+                || (freeWay.Y - FieldCoordinates.Y) * (enemy.FieldCoordinates.Y - FieldCoordinates.Y) > 0)
+            {
+                field[freeWay.X, freeWay.Y].CurrentCharacter = field[FieldCoordinates.X, FieldCoordinates.Y].CurrentCharacter;
+                field[FieldCoordinates.X, FieldCoordinates.Y].CurrentCharacter = null;
+                FuturePosition = field[freeWay.X, freeWay.Y]
+                    .GetCharacterPosition(field[freeWay.X, freeWay.Y].CurrentCharacter);
+                FieldCoordinates = freeWay;
+                return;
+            }
+        }
+    }
+
+    public Vector2 GetPositionForCenterDrawingOnStore(Vector2 mousePosition)
+    {
+        return new Vector2(mousePosition.X - _imageSize.Width * ImageScaleOnStore / 2,
+            mousePosition.Y - _imageSize.Height * ImageScaleOnStore / 2);
     }
     public Vector2 GetPositionForCenterDrawingOnField(Vector2 mousePosition)
     {
@@ -88,6 +153,6 @@ public class Knight : ICharacter
             return false;
         }
 
-        return character.ImageLocation == ImageLocation;
+        return Math.Abs(character.ImageLocation.X - ImageLocation.X) < 10 && Math.Abs(character.ImageLocation.Y - ImageLocation.Y) < 10;
     }
 }

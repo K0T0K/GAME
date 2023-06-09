@@ -6,13 +6,15 @@ namespace GAME.Field;
 
 public class FieldCell
 {
-    public FieldCell(Vector2 coordinates)
+    public FieldCell(Vector2 coordinates, Point fieldCoordinates)
     {
         Coordinates = coordinates;
+        FieldCoordinates = fieldCoordinates;
     }
 
     public ICharacter CurrentCharacter { get; set; }
     public Vector2 Coordinates { get; set; }
+    public Point FieldCoordinates { get; set; }
 
     public Vector2 GetCharacterPosition(ICharacter character)
     {
@@ -24,8 +26,8 @@ public class FieldCell
 
     public bool IsIntersected(Vector2 location)
     {
-        return location.X - Coordinates.X <= 15 && location.X - Coordinates.X > -40 
-               && location.Y - Coordinates.Y <= 15 && location.Y - Coordinates.Y > -40;
+        return location.X - Coordinates.X <= 60 && location.X - Coordinates.X > 0 
+                                                && location.Y - Coordinates.Y <= 60 && location.Y - Coordinates.Y > 0;
     }
 }
     

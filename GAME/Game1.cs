@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using GAME.Controls;
 using GAME.Field;
 using Game1.Characters;
 using Game1.Characters.Enums;
@@ -9,6 +11,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Color = Microsoft.Xna.Framework.Color;
+using Point = Microsoft.Xna.Framework.Point;
 
 
 namespace GAME;
@@ -24,9 +27,15 @@ public class Game1 : Game
     private Vector2 _storeLocation = new(-50, 555);
     private SpriteFont _font;
     private Texture2D _line;
-    private Texture2D _ball;
+    private Texture2D _redRect;
+    private Texture2D _greenRect;
+    private Texture2D _fon;
     private FieldCell[,] _field = new FieldCell[10, 7];
     private Computer _computer = new ();
+    private Button _spawnButton;
+    private ButtonState _previousButtonState;
+    private int _framesCounter = 1;
+    private int _movesLength = 120;
 
     public Game1()
     {
@@ -42,23 +51,27 @@ public class Game1 : Game
         _graphics.ApplyChanges();
         
 
-        var X = 50f;
-        var Y = 100f;
+        var x = 50f;
+        var y = 100f;
         for (var i = 0; i < 7; i++)
         {
             for (var j = 0; j < 10; j++)
             {
-                _field[j, i] = new FieldCell(new Vector2(X, Y));
-                X += -_cellSize.Width * (0.939f + 0.007625f * i);
+                _field[j, i] = new FieldCell(new Vector2(x, y), new Point(j, i));
+                x += _cellSize.Width * (0.939f + 0.007625f * i);
             }
 
-            Y += 68;
-            X = 50f - i * _cellSize.Width * (0.007625f * i);
+            y += 68;
+            x = 50f - i * _cellSize.Width * (0.007625f * i);
         }
             
         _line = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\line.png");
-        _ball = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\ball.png");
+        _redRect = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\red.png");
+        _greenRect = Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\green.png");
         _font = Content.Load<SpriteFont>(@"Fonts\File");
+        _fon = Texture2D.FromFile(GraphicsDevice, @"Images\Fons\fon.png");
+        _spawnButton = new Button("Spawn", new Vector2(970, 20),
+            Texture2D.FromFile(GraphicsDevice, @"Images\Pictures\Button.png"), 0.1f);
         
         _charactersOnStore.Add(new Knight(GraphicsDevice, 100, Player.Human, _storeLocation, 0.1f, 0.2f));
 
@@ -76,31 +89,49 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
 
-        if (Keyboard.GetState().IsKeyDown(Keys.A))
+        if (Mouse.GetState().LeftButton == ButtonState.Pressed 
+            && Mouse.GetState().LeftButton != _previousButtonState 
+            && _spawnButton.IsPressed(Mouse.GetState().Position.ToVector2())
+            && _charactersOnField.Count < 16)
         {
             var computerKnightLocation = _computer.PlaceKnight();
-            if (computerKnightLocation.HasValue)
+            var needPlace = _charactersOnField.Count;
+            var placed = 0;
+            
+            while (placed < needPlace)
             {
-                var enemyKnight = new Knight(GraphicsDevice, 0, Player.Computer, 
-                    computerKnightLocation.Value, 0.1f, 0.2f);
-
-                var intersectedCell = GetIntersectedCell(enemyKnight);
-
-                if (intersectedCell != null && intersectedCell.CurrentCharacter == null)
+                if (computerKnightLocation.HasValue)
                 {
-                    enemyKnight.ImageLocation = intersectedCell.GetCharacterPosition(enemyKnight);
-                    intersectedCell.CurrentCharacter = enemyKnight;
-                    _charactersOnField.Add(enemyKnight);
+                    var enemyKnight = new Knight(GraphicsDevice, 0, Player.Computer,
+                        computerKnightLocation.Value, 0.1f, 0.2f);
+
+                    var intersectedCell = GetIntersectedCell(computerKnightLocation.Value);
+
+                    if (intersectedCell != null && intersectedCell.CurrentCharacter == null)
+                    {
+                        enemyKnight.ImageLocation = intersectedCell.GetCharacterPosition(enemyKnight);
+                        intersectedCell.CurrentCharacter = enemyKnight;
+                        _charactersOnField.Add(enemyKnight);
+                        enemyKnight.FieldCoordinates = intersectedCell.FieldCoordinates;
+                        placed++;
+                    }
                 }
+
+                computerKnightLocation = _computer.PlaceKnight();
             }
         }
         
         foreach (var character in _charactersOnField)
         {
+            if (_framesCounter % _movesLength == 0)
+            {
+                character.Move(_field);
+            }
+            
             if (Mouse.GetState().LeftButton == ButtonState.Pressed && character.IsClicked(Mouse.GetState())
                  && selectedCharacter == null && character.Player == Player.Human)
             {
-                var intersectedCell = GetIntersectedCell(character);
+                var intersectedCell = GetIntersectedCell(Mouse.GetState().Position.ToVector2());
                 
                 if (intersectedCell != null) intersectedCell.CurrentCharacter = null;
 
@@ -108,6 +139,8 @@ public class Game1 : Game
                 _charactersOnField.Remove(character);
                 break;
             }
+            
+            character.UpdatePosition();
         }
 
         foreach (var character in _charactersOnStore)
@@ -115,27 +148,36 @@ public class Game1 : Game
             if (Mouse.GetState().LeftButton == ButtonState.Pressed && character.IsClicked(Mouse.GetState()) &&
                 selectedCharacter == null)
             {
-                selectedCharacter = character;
-                _charactersOnStore.Remove(character);
+                selectedCharacter = character.GetCopy(GraphicsDevice);
                 break;
             }
-            
         }
 
         if (Mouse.GetState().LeftButton == ButtonState.Released && selectedCharacter != null)
         {
-            var intersectedCell = GetIntersectedCell(selectedCharacter);
+            var intersectedCell = GetIntersectedCell(Mouse.GetState().Position.ToVector2());
             if (intersectedCell != null && intersectedCell.CurrentCharacter == null)
             {
                 _charactersOnField.Add(selectedCharacter);
-                selectedCharacter.ImageLocation = intersectedCell.GetCharacterPosition(selectedCharacter);
+                selectedCharacter.SetNewPosition(intersectedCell.GetCharacterPosition(selectedCharacter));
                 intersectedCell.CurrentCharacter = selectedCharacter;
+                selectedCharacter.FieldCoordinates = intersectedCell.FieldCoordinates;
                 selectedCharacter = null;
             }
         }
 
+        foreach (var fieldCell in _field)
+        {
+            if (fieldCell.CurrentCharacter != null && fieldCell.CurrentCharacter.Health < 1) fieldCell.CurrentCharacter = null;
+        }
+        _charactersOnField = _charactersOnField.Where(x => x.Health > 0).ToList();
+        _previousButtonState = Mouse.GetState().LeftButton;
         base.Update(gameTime);
-
+        _framesCounter++;
+        if (_framesCounter == _movesLength + 1)
+        {
+            _framesCounter = 1;
+        }
     }
 
     private void DrawLineBetween(
@@ -158,8 +200,9 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.Gray);
         _spriteBatch.Begin();
-
-
+        _spriteBatch.Draw(_fon, new Vector2(-200, -250), null, Color.White, 0,
+            Vector2.Zero, 0.45f, SpriteEffects.None, 0);
+        
         // Y lines
         DrawLineBetween(new Vector2(4, 0), new Vector2(4, 720));
         DrawLineBetween(new Vector2(1077, 0), new Vector2(1077, 720));
@@ -192,13 +235,12 @@ public class Game1 : Game
         
 
         if (selectedCharacter != null)
-
         {
             _spriteBatch.Draw(selectedCharacter.GetCurrentImage(),
                 selectedCharacter.GetPositionForCenterDrawingOnField(Mouse.GetState().Position.ToVector2()),
                 null,
                 Color.White, rotation: 0, origin: Vector2.Zero,
-                selectedCharacter.ImageScaleOnField, SpriteEffects.None, 0);
+                selectedCharacter.ImageScaleOnField, Mouse.GetState().Position.X > 470 ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0);
         }
 
         foreach (var character in _charactersOnStore)
@@ -214,29 +256,30 @@ public class Game1 : Game
 
         foreach (var character in _charactersOnField)
         {
-
             _spriteBatch.Draw(character.GetCurrentImage(),
                 character.ImageLocation,
                 null,
                 Color.White, 0, Vector2.Zero,
-                character.ImageScaleOnField, character.Player == Player.Computer ? SpriteEffects.FlipHorizontally: SpriteEffects.None, 0);
-
+                character.ImageScaleOnField, character.Player == Player.Computer ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0);
         }
         //_spriteBatch.Draw(mySpriteTexture, new Vector2(X,Y), Color.White);
         foreach (var cell in _field)
         {
             if (cell.CurrentCharacter != null)
             {
-                _spriteBatch.Draw(_ball, cell.Coordinates, null, Color.Red, 0, 
+                _spriteBatch.Draw(cell.CurrentCharacter.Player == Player.Human ? _greenRect : _redRect, cell.Coordinates, null, Color.White, 0, 
                     Vector2.Zero, 0.2f, SpriteEffects.None, 0);
+                _spriteBatch.DrawString(_font, cell.CurrentCharacter.Health.ToString(), cell.Coordinates, Color.Orange);
             }
         }
+        _spawnButton.Draw(_spriteBatch);
+        
         _spriteBatch.End();
         
         base.Draw(gameTime);
     }
 
-    private FieldCell GetIntersectedCell(ICharacter character)
+    private FieldCell GetIntersectedCell(Vector2 location)
     {
         FieldCell intersectedCell = null;
 
@@ -244,8 +287,7 @@ public class Game1 : Game
         {
             for (var j = 0; j < _field.GetLength(1); j++)
             {
-                if (_field[i, j].CurrentCharacter == null || _field[i, j].CurrentCharacter != null &&
-                    _field[i, j].CurrentCharacter.Equals(character))
+                if (_field[i, j].IsIntersected(location))
                 {
                     intersectedCell = _field[i, j];
                     break;
